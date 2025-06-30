@@ -1,6 +1,7 @@
 const fs = require("fs");
 const url = require("url");
 const path = require("path");
+const slugify = require("slugify");
 const replaceTemplate = require("./modules/replaceTemplate");
 
 // Reading HTML files with absolute paths
@@ -36,7 +37,7 @@ const dataObj = JSON.parse(data);
 
 // Export the handler function for Vercel
 module.exports = (req, res) => {
-  const { query, pathname } = url.parse(req.url, true);
+  const { pathname } = url.parse(req.url, true);
 
   // Serve CSS files
   if (pathname === "/public/template-overview.css") {
@@ -59,11 +60,15 @@ module.exports = (req, res) => {
     res.end(output);
 
     // Product page
-  } else if (pathname === "/product") {
+  } else if (pathname.startsWith("/product")) {
     res.writeHead(200, {
       "Content-type": "text/html",
     });
-    const product = dataObj[query.id];
+    // Extract slug from pathname, e.g., /product/Fresh-Avocados
+    const parts = pathname.split("/");
+    // Find product by slug
+    const product = dataObj.find((p) => slugify(p.productName) === parts[2]);
+
     if (product) {
       const output = replaceTemplate(tempProduct, product);
       res.end(output);
